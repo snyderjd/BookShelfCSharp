@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using BookShelf.Data;
 using BookShelf.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace BookShelf.Controllers
 {
@@ -19,6 +20,7 @@ namespace BookShelf.Controllers
             _context = context;
         }
 
+        [Authorize]
         // GET: Books
         public async Task<IActionResult> Index()
         {
