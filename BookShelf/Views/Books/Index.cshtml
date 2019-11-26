@@ -28,7 +28,7 @@
                 @Html.DisplayNameFor(model => model.Author)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.ApplicationUser)
+                @Html.DisplayNameFor(model => model.ApplicationUserId)
             </th>
             <th></th>
         </tr>
@@ -49,10 +49,10 @@
                 @Html.DisplayFor(modelItem => item.PublishDate)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.Author.FirstName)
+                @Html.DisplayFor(modelItem => item.Author.FullName)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.ApplicationUser.Id)
+                @Html.DisplayFor(modelItem => item.ApplicationUser.FullName)
             </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |

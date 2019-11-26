@@ -43,20 +43,14 @@ namespace BookShelf.Controllers
         {
             var user = await GetCurrentUserAsync();
 
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var author = await _context.Authors
                 .Where(a => a.ApplicationUserId == user.Id)
                 .Include(a => a.ApplicationUser)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
-            if (author == null)
-            {
-                return NotFound();
-            }
+            if (author == null) return NotFound();
 
             return View(author);
         }
@@ -91,20 +85,14 @@ namespace BookShelf.Controllers
         {
             var user = await GetCurrentUserAsync();
 
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var author = await _context.Authors
                 .Where(a => a.ApplicationUserId == user.Id)
                 .Include(a => a.ApplicationUser)
                 .FirstOrDefaultAsync(m => m.Id == id);
 
-            if (author == null)
-            {
-                return NotFound();
-            }
+            if (author == null) return NotFound();
 
             return View(author);
         }
