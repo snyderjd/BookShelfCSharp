@@ -41,14 +41,18 @@ namespace BookShelf.Controllers
         // GET: Authors/Details/5
         public async Task<IActionResult> Details(int? id)
         {
+            var user = await GetCurrentUserAsync();
+
             if (id == null)
             {
                 return NotFound();
             }
 
             var author = await _context.Authors
+                .Where(a => a.ApplicationUserId == user.Id)
                 .Include(a => a.ApplicationUser)
                 .FirstOrDefaultAsync(m => m.Id == id);
+
             if (author == null)
             {
                 return NotFound();
@@ -60,7 +64,6 @@ namespace BookShelf.Controllers
         // GET: Authors/Create
         public IActionResult Create()
         {
-            //ViewData["ApplicationUserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id");
             return View();
         }
 
@@ -80,24 +83,29 @@ namespace BookShelf.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            //ViewData["ApplicationUserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", author.ApplicationUserId);
             return View(author);
         }
 
         // GET: Authors/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
+            var user = await GetCurrentUserAsync();
+
             if (id == null)
             {
                 return NotFound();
             }
 
-            var author = await _context.Authors.FindAsync(id);
+            var author = await _context.Authors
+                .Where(a => a.ApplicationUserId == user.Id)
+                .Include(a => a.ApplicationUser)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
             if (author == null)
             {
                 return NotFound();
             }
-            ViewData["ApplicationUserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", author.ApplicationUserId);
+
             return View(author);
         }
 
@@ -108,15 +116,15 @@ namespace BookShelf.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("Id,FirstName,LastName,PenName,PreferredGenre,ApplicationUserId")] Author author)
         {
-            if (id != author.Id)
-            {
-                return NotFound();
-            }
+            var user = await GetCurrentUserAsync();
+
+            if (id != author.Id) return NotFound();
 
             if (ModelState.IsValid)
             {
                 try
                 {
+                    author.ApplicationUserId = user.Id;
                     _context.Update(author);
                     await _context.SaveChangesAsync();
                 }
@@ -133,25 +141,23 @@ namespace BookShelf.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["ApplicationUserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", author.ApplicationUserId);
+            //ViewData["ApplicationUserId"] = new SelectList(_context.ApplicationUsers, "Id", "Id", author.ApplicationUserId);
             return View(author);
         }
 
         // GET: Authors/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            var user = await GetCurrentUserAsync();
+
+            if (id == null) return NotFound();
 
             var author = await _context.Authors
+                .Where(a => a.ApplicationUserId == user.Id)
                 .Include(a => a.ApplicationUser)
                 .FirstOrDefaultAsync(m => m.Id == id);
-            if (author == null)
-            {
-                return NotFound();
-            }
+
+            if (author == null) return NotFound();
 
             return View(author);
         }
@@ -161,10 +167,26 @@ namespace BookShelf.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            var user = await GetCurrentUserAsync();
             var author = await _context.Authors.FindAsync(id);
-            _context.Authors.Remove(author);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+
+            // Check to see if the user has any books under the author
+            var books = await _context.Books.Where(b => b.AuthorId == author.Id).ToListAsync();
+
+            if (books.Count() == 0)
+            {
+                // No books under the author, so the author can be deleted
+                _context.Authors.Remove(author);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }
+            else
+            {
+                ViewData["ErrorMsg"] = "This author cannot be deleted because they have books in the database.";
+                return RedirectToAction(nameof(Delete), new { id });
+            }
+
+            
         }
 
         private bool AuthorExists(int id)
